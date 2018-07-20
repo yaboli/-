@@ -1,6 +1,5 @@
 import os
 import jieba
-import thulac
 from sklearn.datasets.base import Bunch
 import pickle
 

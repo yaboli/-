@@ -1,5 +1,4 @@
 import pickle  # 导入持久化类
-from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
@@ -9,7 +8,6 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC, SVC
 import xgboost as xgb
 import lightgbm as lgb
-import numpy as np
 
 
 def readbunchobj(path):  # 读取bunch对象函数
@@ -43,7 +41,7 @@ def train_nb(train_set):
     return clf
 
 
-def train_random_forest(train_set):
+def train_rf(train_set):
     clf = RandomForestClassifier(
         max_depth=5,
         random_state=42)
@@ -54,7 +52,7 @@ def train_random_forest(train_set):
     return clf
 
 
-def train_sgd_clf(train_set):
+def train_sgd(train_set):
     clf = SGDClassifier(
         loss='hinge',
         penalty='l2',
@@ -118,7 +116,7 @@ def train_xgb(train_set):
     return clf
 
 
-def train_lightgbm(train_set, test_set):
+def train_lgbm(train_set, test_set):
     X_train = train_set.tdm
     y_train = train_set.label
     X_test = test_set.tdm
@@ -174,9 +172,9 @@ def main():
         if user_input == '1':
             clf = train_nb(train_set)
         elif user_input == '2':
-            clf = train_random_forest(train_set)
+            clf = train_rf(train_set)
         elif user_input == '3':
-            clf = train_sgd_clf(train_set)
+            clf = train_sgd(train_set)
         elif user_input == '4':
             clf = train_lsvc(train_set)
         elif user_input == '5':
@@ -184,7 +182,7 @@ def main():
         elif user_input == '6':
             clf = train_xgb(train_set)
         elif user_input == '7':
-            clf = train_lightgbm(train_set, test_set)
+            clf = train_lgbm(train_set, test_set)
 
         print('\nFitting completed')
 
