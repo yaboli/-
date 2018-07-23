@@ -8,6 +8,8 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC, SVC
 import xgboost as xgb
 import lightgbm as lgb
+from catboost import Pool, CatBoostClassifier
+from sklearn.preprocessing import LabelEncoder
 
 
 def readbunchobj(path):  # 读取bunch对象函数
@@ -138,6 +140,17 @@ def train_lgbm(train_set, test_set):
     return clf
 
 
+def train_catboost(tdm, label):
+    train_pool = Pool(tdm, label)
+    clf = CatBoostClassifier(
+        iterations=2,
+        learning_rate=1,
+        depth=2,
+        loss_function='MultiClass')
+    clf.fit(train_pool)
+    return clf
+
+
 def save_model(model_path, model):
     with open(model_path, 'wb') as f:
         pickle.dump(model, f)
@@ -149,7 +162,10 @@ def main():
     train_set = bunch_obj.train
     test_set = bunch_obj.test
 
-    print(train_set.tdm.shape)
+    # CatBoost的fit函数只能使用numeric标签，这里须将string标签转换成数字
+    le = LabelEncoder()
+    le.fit(test_set.label)
+    label_catboost = le.transform(train_set.label)
 
     while True:
         user_input = input(
@@ -161,10 +177,11 @@ def main():
             '\n5 - GBM'
             '\n6 - XGBoost'
             '\n7 - LightGBM'
-            '\n8 - 退出'
+            '\n8 - CatBoost'
+            '\n9 - 退出'
             '\n')
 
-        if user_input == '8':
+        if user_input == '9':
             break
 
         print('\nFitting model with training set...')
@@ -183,12 +200,22 @@ def main():
             clf = train_xgb(train_set)
         elif user_input == '7':
             clf = train_lgbm(train_set, test_set)
+        elif user_input == '8':
+            clf = train_catboost(train_set.tdm, label_catboost)
 
         print('\nFitting completed')
 
         # 预测分类结果
         actual = test_set.label
-        predicted = clf.predict(test_set.tdm)
+        if user_input == '8':
+            test_pool = Pool(test_set.tdm)
+            temp = clf.predict(test_pool)
+            result = []
+            for pred in temp:
+                result.append(int(pred[0]))
+            predicted = le.inverse_transform(result)
+        else:
+            predicted = clf.predict(test_set.tdm)
         print(metrics.classification_report(actual, predicted, target_names=bunch_obj.target_name))
         print('accuracy: {:.6f}'.format(metrics.accuracy_score(actual, predicted)))
 
